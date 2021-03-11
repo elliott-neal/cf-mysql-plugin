@@ -1,7 +1,7 @@
 # Cloud Foundry CLI MySQL Plugin
 
 [![Build Status](https://travis-ci.org/andreasf/cf-mysql-plugin.svg?branch=master)](https://travis-ci.org/andreasf/cf-mysql-plugin)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/andreasf/cf-mysql-plugin/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/elliott-neal/cf-mysql-plugin/blob/master/LICENSE)
 
 cf-mysql-plugin makes it easy to connect the `mysql` command line client to any MySQL-compatible database used by
 Cloud Foundry apps. Use it to
@@ -164,6 +164,15 @@ $ cf uninstall-plugin mysql
 go get -v -t ./...
 go get github.com/onsi/ginkgo
 go get github.com/onsi/gomega
+#go get golang.org/x/tools/go/ast/inspector
+#go get code.cloudfoundry.org/cli/cf/api/resources
+#go get code.cloudfoundry.org/cli/cf/errors
+#go get code.cloudfoundry.org/cli/cf/i18n
+#go get code.cloudfoundry.org/cli/cf/net
+#go get code.cloudfoundry.org/cli/cf/trace
+#go get code.cloudfoundry.org/cli/plugin
+#go get code.cloudfoundry.org/cli/plugin/models
+#go get github.com/phayes/freeport
 go install github.com/onsi/ginkgo/ginkgo
 
 # run tests and build

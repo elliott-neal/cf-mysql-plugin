@@ -2,8 +2,8 @@ package cfmysql_test
 
 import (
 	"errors"
-	. "github.com/andreasf/cf-mysql-plugin/cfmysql"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
+	. "github.com/elliott-neal/cf-mysql-plugin/cfmysql"
+	"github.com/elliott-neal/cf-mysql-plugin/cfmysql/cfmysqlfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"os"

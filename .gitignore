@@ -30,6 +30,7 @@ _testmain.go
 *.iml
 
 cf-mysql-plugin
+cf-mysql2-plugin
 *.coverprofile
 
 output

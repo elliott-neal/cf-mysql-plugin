@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"sync"
 
-	"github.com/andreasf/cf-mysql-plugin/cfmysql"
+	"github.com/elliott-neal/cf-mysql-plugin/cfmysql"
 )
 
 type FakeExecWrapper struct {

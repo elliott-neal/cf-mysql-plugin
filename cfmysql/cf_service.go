@@ -4,7 +4,7 @@ import (
 	"code.cloudfoundry.org/cli/plugin"
 	sdkModels "code.cloudfoundry.org/cli/plugin/models"
 	"fmt"
-	pluginModels "github.com/andreasf/cf-mysql-plugin/cfmysql/models"
+	pluginModels "github.com/elliott-neal/cf-mysql-plugin/cfmysql/models"
 	"io"
 )
 
@@ -26,7 +26,7 @@ func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, http
 	}
 }
 
-const ServiceKeyName = "cf-mysql"
+const ServiceKeyName = "cf-rds-mysql"
 
 type MysqlService struct {
 	Name     string
@@ -70,7 +70,7 @@ func (self *cfService) GetService(connection plugin.CliConnection, name string) 
 		return MysqlService{}, fmt.Errorf("unable to retrieve metadata for service %s: %s", name, err)
 	}
 
-	serviceKey, found, err := self.apiClient.GetServiceKey(connection, instance.Guid, ServiceKeyName)
+	serviceKey, found, err := self.apiClient.GetServiceKey(connection, instance.Guid, instance.ServiceUrl, ServiceKeyName)
 	if err != nil {
 		return MysqlService{}, fmt.Errorf("unable to retrieve service key: %s", err)
 	}
@@ -80,7 +80,7 @@ func (self *cfService) GetService(connection plugin.CliConnection, name string) 
 	}
 
 	fmt.Fprintf(self.logWriter, "Creating new service key %s for %s...\n", ServiceKeyName, name)
-	serviceKey, err = self.apiClient.CreateServiceKey(connection, instance.Guid, ServiceKeyName)
+	serviceKey, err = self.apiClient.CreateServiceKey(connection, instance.Guid, instance.ServiceUrl, ServiceKeyName)
 	if err != nil {
 		return MysqlService{}, fmt.Errorf("unable to create service key: %s", err)
 	}

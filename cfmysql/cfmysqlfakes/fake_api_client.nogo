@@ -6,8 +6,8 @@ import (
 
 	"code.cloudfoundry.org/cli/plugin"
 	sdkModels "code.cloudfoundry.org/cli/plugin/models"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql"
-	pluginModels "github.com/andreasf/cf-mysql-plugin/cfmysql/models"
+	"github.com/elliott-neal/cf-mysql-plugin/cfmysql"
+	pluginModels "github.com/elliott-neal/cf-mysql-plugin/cfmysql/models"
 )
 
 type FakeApiClient struct {

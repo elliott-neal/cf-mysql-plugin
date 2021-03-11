@@ -9,8 +9,8 @@ import (
 
 	"bytes"
 	"code.cloudfoundry.org/cli/cf/net/netfakes"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
+	"github.com/elliott-neal/cf-mysql-plugin/cfmysql"
+	"github.com/elliott-neal/cf-mysql-plugin/cfmysql/cfmysqlfakes"
 	"github.com/onsi/gomega/ghttp"
 )
 

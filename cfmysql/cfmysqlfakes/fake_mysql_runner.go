@@ -4,7 +4,7 @@ package cfmysqlfakes
 import (
 	"sync"
 
-	"github.com/andreasf/cf-mysql-plugin/cfmysql"
+	"github.com/elliott-neal/cf-mysql-plugin/cfmysql"
 )
 
 type FakeMysqlRunner struct {

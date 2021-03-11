@@ -1,9 +1,14 @@
 package models
 
 type ServiceInstance struct {
-	Name      string
-	Guid      string
-	SpaceGuid string
+	Name       string
+	Guid       string
+	SpaceGuid  string
+	ServiceUrl string
+}
+
+type ServiceInstanceType struct {
+	Type 	string
 }
 
 type ServiceKey struct {

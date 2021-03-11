@@ -3,7 +3,7 @@ package cfmysql_test
 import (
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"
 	"errors"
-	. "github.com/andreasf/cf-mysql-plugin/cfmysql"
+	. "github.com/elliott-neal/cf-mysql-plugin/cfmysql"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

@@ -1,7 +1,7 @@
 package cfmysql_test
 
 import (
-	. "github.com/andreasf/cf-mysql-plugin/cfmysql"
+	. "github.com/elliott-neal/cf-mysql-plugin/cfmysql"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

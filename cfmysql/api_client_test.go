@@ -1,7 +1,7 @@
 package cfmysql_test
 
 import (
-	. "github.com/andreasf/cf-mysql-plugin/cfmysql"
+	. "github.com/elliott-neal/cf-mysql-plugin/cfmysql"
 
 	"errors"
 	"fmt"
@@ -9,9 +9,9 @@ import (
 	"bytes"
 	"code.cloudfoundry.org/cli/plugin/models"
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/test_resources"
+	"github.com/elliott-neal/cf-mysql-plugin/cfmysql/cfmysqlfakes"
+	"github.com/elliott-neal/cf-mysql-plugin/cfmysql/models"
+	"github.com/elliott-neal/cf-mysql-plugin/cfmysql/test_resources"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"io"
