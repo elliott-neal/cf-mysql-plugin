@@ -1,6 +1,7 @@
 package cfmysql_test
 
 import (
+	"code.cloudfoundry.org/cli/plugin"
 	. "github.com/elliott-neal/cf-mysql-plugin/cfmysql"
 
 	"errors"

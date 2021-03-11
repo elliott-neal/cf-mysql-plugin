@@ -88,6 +88,8 @@ func (self *apiClient) GetServiceKey(cliConnection plugin.CliConnection, service
 		return pluginModels.ServiceKey{}, false, fmt.Errorf("unable to determine service type: %s", err)
 	}
 
+	fmt.Println(instancetype)
+
 	var serviceKeys []pluginModels.ServiceKey
 
 	if instancetype == "p.mysql" {
