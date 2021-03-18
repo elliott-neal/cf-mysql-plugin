@@ -26,7 +26,7 @@ func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, http
 	}
 }
 
-const ServiceKeyName = "cf-rds-mysql"
+const ServiceKeyName = "cf-mysql"
 
 type MysqlService struct {
 	Name     string

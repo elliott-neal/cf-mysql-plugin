@@ -82,7 +82,7 @@ var _ = Describe("Resources", func() {
 	Describe("Service keys", func() {
 		Context("Deserializing JSON", func() {
 			It("can get credentials", func() {
-				paginatedResources := new(PaginatedServiceKeyResources)
+				paginatedResources := new(PaginatedPMysqlServiceKeyResources)
 				err := json.Unmarshal(test_resources.LoadResource("../test_resources/service_keys.json"), paginatedResources)
 
 				Expect(err).To(BeNil())
@@ -111,12 +111,12 @@ var _ = Describe("Resources", func() {
 
 		Context("Converting to models", func() {
 			It("Converts very nicely if the port is string or int", func() {
-				resourceBindings := &PaginatedServiceKeyResources{
-					Resources: []ServiceKeyResource{
+				resourceBindings := &PaginatedPMysqlServiceKeyResources{
+					Resources: []PMysqlServiceKeyResource{
 						{
-							Entity: ServiceKeyEntity{
+							Entity: PMysqlServiceKeyEntity{
 								ServiceInstanceGuid: "service-instance-guid-a",
-								Credentials: MysqlCredentials{
+								Credentials: PMysqlCredentials{
 									Uri:      "uri-a",
 									DbName:   "db-name-a",
 									Hostname: "hostname-a",
@@ -132,9 +132,9 @@ var _ = Describe("Resources", func() {
 							},
 						},
 						{
-							Entity: ServiceKeyEntity{
+							Entity: PMysqlServiceKeyEntity{
 								ServiceInstanceGuid: "service-instance-guid-b",
-								Credentials: MysqlCredentials{
+								Credentials: PMysqlCredentials{
 									Uri:      "uri-b",
 									DbName:   "db-name-b",
 									Hostname: "hostname-b",
@@ -175,12 +175,12 @@ var _ = Describe("Resources", func() {
 			})
 
 			It("Returns an error if the port is not string or int", func() {
-				keyResources := &PaginatedServiceKeyResources{
-					Resources: []ServiceKeyResource{
+				keyResources := &PaginatedPMysqlServiceKeyResources{
+					Resources: []PMysqlServiceKeyResource{
 						{
-							Entity: ServiceKeyEntity{
+							Entity: PMysqlServiceKeyEntity{
 								ServiceInstanceGuid: "service-instance-guid-b",
-								Credentials: MysqlCredentials{
+								Credentials: PMysqlCredentials{
 									Uri:      "uri-b",
 									DbName:   "db-name-b",
 									Hostname: "hostname-b",

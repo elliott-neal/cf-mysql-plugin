@@ -179,7 +179,7 @@ func (fake *FakeApiClient) GetServiceReturnsOnCall(i int, result1 pluginModels.S
 	}{result1, result2}
 }
 
-func (fake *FakeApiClient) GetServiceKey(cliConnection plugin.CliConnection, serviceInstanceGuid string, keyName string) (key pluginModels.ServiceKey, found bool, err error) {
+func (fake *FakeApiClient) GetServiceKey(cliConnection plugin.CliConnection, serviceInstanceGuid string, serviceInstanceUrl string, keyName string) (key pluginModels.ServiceKey, found bool, err error) {
 	fake.getServiceKeyMutex.Lock()
 	ret, specificReturn := fake.getServiceKeyReturnsOnCall[len(fake.getServiceKeyArgsForCall)]
 	fake.getServiceKeyArgsForCall = append(fake.getServiceKeyArgsForCall, struct {
@@ -235,7 +235,11 @@ func (fake *FakeApiClient) GetServiceKeyReturnsOnCall(i int, result1 pluginModel
 	}{result1, result2, result3}
 }
 
-func (fake *FakeApiClient) CreateServiceKey(cliConnection plugin.CliConnection, serviceInstanceGuid string, keyName string) (pluginModels.ServiceKey, error) {
+func (fake *FakeApiClient) GetInstanceType(cliConnection plugin.CliConnection, serviceUrl string) (string, error) {
+	return "", nil
+}
+
+func (fake *FakeApiClient) CreateServiceKey(cliConnection plugin.CliConnection, serviceInstanceGuid string, serviceInstanceUrl string, keyName string) (pluginModels.ServiceKey, error) {
 	fake.createServiceKeyMutex.Lock()
 	ret, specificReturn := fake.createServiceKeyReturnsOnCall[len(fake.createServiceKeyArgsForCall)]
 	fake.createServiceKeyArgsForCall = append(fake.createServiceKeyArgsForCall, struct {

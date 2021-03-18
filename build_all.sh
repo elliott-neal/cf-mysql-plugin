@@ -3,12 +3,12 @@ set -e
 set -o pipefail
 
 
-#export GOPATH=`realpath ../../../../`
+export GOPATH=`realpath ../../../../`
 
-BINARY="cf-rds-mysql"
+BINARY="cf-mysql"
 
 main() {
-#    ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race --compilers=2
+ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race --compilers=2
 
     build_for_platform_and_arch linux amd64
     build_for_platform_and_arch linux 386
@@ -69,13 +69,13 @@ print_release_yaml() {
 - name: mysql-plugin
   description: Runs mysql and mysqldump clients against your CF database services. Use it to inspect, dump and restore your DB.
   version: ${version}
-  created: 2017-02-02T09:30:00Z
+  created: 2020-03-18T12:24:00Z
   updated: ${updated}
-  company:
+  company: Sealed Air Corp.
   authors:
-  - name: Andreas Fleig
-    homepage: https://github.com/andreasf
-    contact: afleig@pivotal.io
+  - name: Elliott Neal
+    homepage: https://github.com/elliott-neal
+    contact: elliott.neal@sealedair.com
   homepage: https://github.com/elliott-neal/cf-mysql-plugin
   binaries:
   - platform: osx

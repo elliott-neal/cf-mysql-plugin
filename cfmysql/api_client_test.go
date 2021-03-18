@@ -1,7 +1,6 @@
 package cfmysql_test
 
 import (
-	"code.cloudfoundry.org/cli/plugin"
 	. "github.com/elliott-neal/cf-mysql-plugin/cfmysql"
 
 	"errors"
@@ -36,6 +35,8 @@ var _ = Describe("ApiClient", func() {
 				return test_resources.LoadResource("test_resources/service_instance.json"), nil
 			case "https://cf.api.url/v2/spaces/space-guid/service_instances?return_user_provided_service_instances=true&q=name%3Ano-such-service":
 				return test_resources.LoadResource("test_resources/service_instance_empty.json"), nil
+			case "https://cf.api.url/v2/services/service-instance-guid":
+				return test_resources.LoadResource("test_resources/service_type.json"), nil
 			default:
 				return nil, fmt.Errorf("URL not handled in mock: %s", url)
 			}
@@ -122,7 +123,7 @@ var _ = Describe("ApiClient", func() {
 	Describe("GetServiceKey", func() {
 		Context("When the API returns a key", func() {
 			It("Returns the key", func() {
-				serviceKey, found, err := apiClient.GetServiceKey(cliConnection, "service-instance-guid", "service-key-name")
+				serviceKey, found, err := apiClient.GetServiceKey(cliConnection, "service-instance-guid", "/v2/services/service-instance-guid", "service-key-name")
 
 				Expect(found).To(BeTrue())
 				Expect(err).To(BeNil())
@@ -141,7 +142,7 @@ var _ = Describe("ApiClient", func() {
 
 		Context("When no key was found for the given service guid and key name", func() {
 			It("Returns not found", func() {
-				serviceKey, found, err := apiClient.GetServiceKey(cliConnection, "service-instance-guid", "no-such-key")
+				serviceKey, found, err := apiClient.GetServiceKey(cliConnection, "service-instance-guid", "/v2/services/service-instance-guid", "no-such-key")
 
 				Expect(found).To(BeFalse())
 				Expect(err).To(BeNil())
@@ -153,7 +154,7 @@ var _ = Describe("ApiClient", func() {
 	Describe("CreateServiceKey", func() {
 		Context("When the API returns a key", func() {
 			It("Returns the key", func() {
-				serviceKey, err := apiClient.CreateServiceKey(cliConnection, "service-instance-guid", "service-key-name")
+				serviceKey, err := apiClient.CreateServiceKey(cliConnection, "service-instance-guid", "/v2/services/service-instance-guid", "service-key-name")
 
 				url, body, accessToken, sslDisabled := mockHttp.PostArgsForCall(0)
 				Expect(url).To(Equal("https://cf.api.url/v2/service_keys"))
