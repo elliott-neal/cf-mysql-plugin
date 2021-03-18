@@ -139,13 +139,7 @@ This behavior might change in the future as it's not optimal to leave a key arou
 
 ## Installing and uninstalling
 
-The easiest way is to install from the repository:
-
-```bash
-$ cf install-plugin -r "CF-Community" mysql-plugin
-```
-
-You can also download a binary release or build yourself by running `go build`. Then, install the plugin with
+You can download a binary release or build yourself by running `go build`. Then, install the plugin with
 
 ```bash
 $ cf install-plugin /path/to/cf-mysql-plugin
