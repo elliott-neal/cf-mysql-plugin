@@ -42,6 +42,17 @@ type PMysqlCredentials struct {
 	Tls      TlsResource     `json:"tls"`
 }
 
+type AwsRdsMysqlCredentials struct {
+	Uri      string `json:"uri"`
+	DbName   string `json:"database"`
+	Hostname string `json:"hostname"`
+	Port     string
+	RawPort  json.RawMessage `json:"port"`
+	Username string          `json:"username"`
+	Password string          `json:"password"`
+	Tls      TlsResource     `json:"tls"`
+}
+
 type RdsMysqlCredentials struct {
 	Uri      string `json:"uri"`
 	DbName   string `json:"DB_NAME"`
@@ -78,6 +89,12 @@ type PaginatedPMysqlServiceKeyResources struct {
 	Resources    []PMysqlServiceKeyResource
 }
 
+type PaginatedAwsRdsMysqlServiceKeyResources struct {
+	TotalResults int    `json:"total_results"`
+	NextUrl      string `json:"next_url"`
+	Resources    []AwsRdsMysqlServiceKeyResource
+}
+
 type PaginatedRdsMysqlServiceKeyResources struct {
 	TotalResults int    `json:"total_results"`
 	NextUrl      string `json:"next_url"`
@@ -87,6 +104,11 @@ type PaginatedRdsMysqlServiceKeyResources struct {
 type PMysqlServiceKeyResource struct {
 	resources.Resource
 	Entity PMysqlServiceKeyEntity
+}
+
+type AwsRdsMysqlServiceKeyResource struct {
+	resources.Resource
+	Entity AwsRdsMysqlServiceKeyEntity
 }
 
 type RdsMysqlServiceKeyResource struct {
@@ -109,6 +131,11 @@ type PMysqlServiceKeyEntity struct {
 	Credentials         PMysqlCredentials
 }
 
+type AwsRdsMysqlServiceKeyEntity struct {
+	ServiceInstanceName string `json:"name"`
+	ServiceInstanceGuid string `json:"service_instance_guid"`
+	Credentials         AwsRdsMysqlCredentials
+}
 
 type RdsMysqlServiceKeyEntity struct {
 	ServiceInstanceName string `json:"name"`
@@ -147,6 +174,21 @@ func (self *PaginatedServiceInstanceResources) ToModel() []models.ServiceInstanc
 }
 
 func (self *PaginatedPMysqlServiceKeyResources) ToModel() ([]models.ServiceKey, error) {
+	var convertedModels []models.ServiceKey
+
+	for _, resource := range self.Resources {
+		model, err := resource.ToModel()
+		if err != nil {
+			return nil, err
+		}
+
+		convertedModels = append(convertedModels, model)
+	}
+
+	return convertedModels, nil
+}
+
+func (self *PaginatedAwsRdsMysqlServiceKeyResources) ToModel() ([]models.ServiceKey, error) {
 	var convertedModels []models.ServiceKey
 
 	for _, resource := range self.Resources {
@@ -213,6 +255,36 @@ func (self *PMysqlServiceKeyResource) ToModel() (models.ServiceKey, error) {
 }
 
 func (self *RdsMysqlServiceKeyResource) ToModel() (models.ServiceKey, error) {
+	var port string
+
+	if len(self.Entity.Credentials.RawPort) > 0 {
+		var portInt int
+		var portString string
+
+		err := json.Unmarshal(self.Entity.Credentials.RawPort, &portString)
+		if err != nil {
+			err = json.Unmarshal(self.Entity.Credentials.RawPort, &portInt)
+			if err != nil {
+				return models.ServiceKey{}, fmt.Errorf("unable to deserialize port in service key: '%s'", string(self.Entity.Credentials.RawPort))
+			}
+			portString = strconv.Itoa(portInt)
+		}
+		port = portString
+	}
+
+	return models.ServiceKey{
+		ServiceInstanceGuid: self.Entity.ServiceInstanceGuid,
+		Uri:                 self.Entity.Credentials.Uri,
+		DbName:              self.Entity.Credentials.DbName,
+		Hostname:            self.Entity.Credentials.Hostname,
+		Port:                port,
+		Username:            self.Entity.Credentials.Username,
+		Password:            self.Entity.Credentials.Password,
+		CaCert:              self.Entity.Credentials.Tls.Cert.Ca,
+	}, nil
+}
+
+func (self *AwsRdsMysqlServiceKeyResource) ToModel() (models.ServiceKey, error) {
 	var port string
 
 	if len(self.Entity.Credentials.RawPort) > 0 {

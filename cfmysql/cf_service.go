@@ -66,6 +66,7 @@ func (self *cfService) GetService(connection plugin.CliConnection, name string) 
 	}
 
 	instance, err := self.apiClient.GetService(connection, space.Guid, name)
+
 	if err != nil {
 		return MysqlService{}, fmt.Errorf("unable to retrieve metadata for service %s: %s", name, err)
 	}

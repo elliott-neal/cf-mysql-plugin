@@ -3,6 +3,7 @@ package cfmysql
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"bytes"
 	"code.cloudfoundry.org/cli/plugin"
@@ -94,11 +95,15 @@ func (self *apiClient) GetServiceKey(cliConnection plugin.CliConnection, service
 
 	if instancetype == "p.mysql" {
 		serviceKeys, err = deserializePMysqlServiceKeys(keyResponse)
+	} else if instancetype == "aws-rds-mysql" {
+		serviceKeys, err = deserializeAwsRdsMysqlServiceKeys(keyResponse)
 	} else if instancetype == "rdsmysql" {
 		serviceKeys, err = deserializeRdsMysqlServiceKeys(keyResponse)
 	} else {
 		return pluginModels.ServiceKey{}, false, fmt.Errorf("unsupported service type: %s", instancetype)
 	}
+
+	fmt.Fprintf(os.Stdout,"Retrieving service Key:%s\n", serviceKeys)
 
 	if err != nil {
 		return pluginModels.ServiceKey{}, false, fmt.Errorf("error deserializing service key response: %s", err)
@@ -132,16 +137,20 @@ func (self *apiClient) CreateServiceKey(cliConnection plugin.CliConnection, serv
 		return pluginModels.ServiceKey{}, fmt.Errorf("unable to determine service type: %s", err)
 	}
 
+	fmt.Fprintf(os.Stdout,"Response received %s, for instance: %s", response, instancetype)
+
 	var serviceKey pluginModels.ServiceKey
 
 	if instancetype == "p.mysql" {
 		serviceKey, err = deserializePMysqlServiceKey(response)
+	} else if instancetype == "aws-rds-mysql" {
+		serviceKey, err = deserializeAwsRdsMysqlServiceKey(response)
 	} else if instancetype == "rdsmysql" {
 		serviceKey, err = deserializeRdsMysqlServiceKey(response)
 	} else {
 		return pluginModels.ServiceKey{}, fmt.Errorf("unsupported service type: %s", instancetype)
 	}
-
+	fmt.Fprintf(os.Stdout,"Printing service Key:%s\n", serviceKey)
 	if err != nil {
 		return pluginModels.ServiceKey{}, fmt.Errorf("error deserializing service key response: %s", err)
 	}
@@ -237,6 +246,21 @@ func deserializePMysqlServiceKeys(keyResponse []byte) ([]pluginModels.ServiceKey
 	return serviceKeys, nil
 }
 
+func deserializeAwsRdsMysqlServiceKeys(keyResponse []byte) ([]pluginModels.ServiceKey, error) {
+	paginatedResources := new(resources.PaginatedAwsRdsMysqlServiceKeyResources)
+	err := json.Unmarshal(keyResponse, paginatedResources)
+	if err != nil {
+		return nil, fmt.Errorf("error deserializing service key response: %s", err)
+	}
+
+	serviceKeys, err := paginatedResources.ToModel()
+	if err != nil {
+		return nil, fmt.Errorf("error converting service key response: %s", err)
+	}
+
+	return serviceKeys, nil
+}
+
 func deserializeRdsMysqlServiceKeys(keyResponse []byte) ([]pluginModels.ServiceKey, error) {
 	paginatedResources := new(resources.PaginatedRdsMysqlServiceKeyResources)
 	err := json.Unmarshal(keyResponse, paginatedResources)
@@ -254,6 +278,21 @@ func deserializeRdsMysqlServiceKeys(keyResponse []byte) ([]pluginModels.ServiceK
 
 func deserializePMysqlServiceKey(keyResponse []byte) (pluginModels.ServiceKey, error) {
 	resource := new(resources.PMysqlServiceKeyResource)
+	err := json.Unmarshal(keyResponse, resource)
+	if err != nil {
+		return pluginModels.ServiceKey{}, fmt.Errorf("error deserializing service key response: %s", err)
+	}
+
+	serviceKey, err := resource.ToModel()
+	if err != nil {
+		return pluginModels.ServiceKey{}, fmt.Errorf("error converting service key response: %s", err)
+	}
+
+	return serviceKey, nil
+}
+
+func deserializeAwsRdsMysqlServiceKey(keyResponse []byte) (pluginModels.ServiceKey, error) {
+	resource := new(resources.AwsRdsMysqlServiceKeyResource)
 	err := json.Unmarshal(keyResponse, resource)
 	if err != nil {
 		return pluginModels.ServiceKey{}, fmt.Errorf("error deserializing service key response: %s", err)
