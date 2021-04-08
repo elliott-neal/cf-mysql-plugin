@@ -1,13 +1,11 @@
 package cfmysql
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
-
 	"bytes"
 	"code.cloudfoundry.org/cli/plugin"
 	sdkModels "code.cloudfoundry.org/cli/plugin/models"
+	"encoding/json"
+	"fmt"
 	pluginModels "github.com/elliott-neal/cf-mysql-plugin/cfmysql/models"
 	"github.com/elliott-neal/cf-mysql-plugin/cfmysql/resources"
 	"io"
@@ -32,6 +30,7 @@ func NewApiClient(httpClient HttpWrapper) *apiClient {
 type apiClient struct {
 	httpClient HttpWrapper
 	cliConfig  *CliConfig
+	logWriter   io.Writer
 }
 
 func (self *apiClient) GetInstanceType(cliConnection plugin.CliConnection, serviceUrl string) (string, error) {
@@ -61,6 +60,8 @@ func (self *apiClient) GetService(cliConnection plugin.CliConnection, spaceGuid 
 	}
 
 	_, instances, err := deserializeInstances(instanceResponse)
+	//return pluginModels.ServiceInstance{}, fmt.Errorf("Service Binding URL returned: %s", instances[0])
+
 	if err != nil {
 		return pluginModels.ServiceInstance{}, fmt.Errorf("error deserializing service instances: %s", err)
 	}
@@ -80,6 +81,7 @@ func (self *apiClient) GetServiceKey(cliConnection plugin.CliConnection, service
 	)
 
 	keyResponse, err := self.getFromCfApi(path, cliConnection)
+
 	if err != nil {
 		return pluginModels.ServiceKey{}, false, fmt.Errorf("error retrieving service key: %s", err)
 	}
@@ -88,8 +90,6 @@ func (self *apiClient) GetServiceKey(cliConnection plugin.CliConnection, service
 	if err != nil {
 		return pluginModels.ServiceKey{}, false, fmt.Errorf("unable to determine service type: %s", err)
 	}
-
-	fmt.Println(instancetype)
 
 	var serviceKeys []pluginModels.ServiceKey
 
@@ -102,8 +102,6 @@ func (self *apiClient) GetServiceKey(cliConnection plugin.CliConnection, service
 	} else {
 		return pluginModels.ServiceKey{}, false, fmt.Errorf("unsupported service type: %s", instancetype)
 	}
-
-	fmt.Fprintf(os.Stdout,"Retrieving service Key:%s\n", serviceKeys)
 
 	if err != nil {
 		return pluginModels.ServiceKey{}, false, fmt.Errorf("error deserializing service key response: %s", err)
@@ -137,8 +135,6 @@ func (self *apiClient) CreateServiceKey(cliConnection plugin.CliConnection, serv
 		return pluginModels.ServiceKey{}, fmt.Errorf("unable to determine service type: %s", err)
 	}
 
-	fmt.Fprintf(os.Stdout,"Response received %s, for instance: %s", response, instancetype)
-
 	var serviceKey pluginModels.ServiceKey
 
 	if instancetype == "p.mysql" {
@@ -150,7 +146,7 @@ func (self *apiClient) CreateServiceKey(cliConnection plugin.CliConnection, serv
 	} else {
 		return pluginModels.ServiceKey{}, fmt.Errorf("unsupported service type: %s", instancetype)
 	}
-	fmt.Fprintf(os.Stdout,"Printing service Key:%s\n", serviceKey)
+	fmt.Fprintf(self.logWriter,"Printing service Key:%s\n", serviceKey)
 	if err != nil {
 		return pluginModels.ServiceKey{}, fmt.Errorf("error deserializing service key response: %s", err)
 	}

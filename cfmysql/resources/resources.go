@@ -147,7 +147,8 @@ type ServiceInstanceEntity struct {
 	Name            string                         `json:"name"`
 	DashboardURL    string                         `json:"dashboard_url"`
 	Tags            []string                       `json:"tags"`
-	ServiceBindings []ServiceBindingResource       `json:"service_bindings"`
+	ServiceBindings []resources.ServiceBindingResource       `json:"service_bindings"`
+	//ServiceBindings string					       `json:"service_bindings"`
 	ServiceKeys     []resources.ServiceKeyResource `json:"service_keys"`
 	ServicePlan     resources.ServicePlanResource  `json:"service_plan"`
 	LastOperation   resources.LastOperation        `json:"last_operation"`
@@ -163,6 +164,7 @@ func (self *PaginatedServiceInstanceResources) ToModel() []models.ServiceInstanc
 		model.Guid = resource.Metadata.GUID
 		model.Name = resource.Entity.Name
 		model.ServiceUrl = resource.Entity.ServiceUrl
+		model.ServiceBindingsUrl = resource.Entity.ServiceBindings
 
 		pathParts := strings.Split(resource.Entity.SpaceUrl, "/")
 		model.SpaceGuid = pathParts[len(pathParts)-1]
