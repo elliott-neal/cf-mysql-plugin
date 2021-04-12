@@ -1,7 +1,6 @@
 package cfmysql
 
 import (
-	"bytes"
 	"code.cloudfoundry.org/cli/plugin"
 	sdkModels "code.cloudfoundry.org/cli/plugin/models"
 	"encoding/json"
@@ -15,10 +14,7 @@ import (
 //go:generate counterfeiter . ApiClient
 type ApiClient interface {
 	GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error)
-	GetService(cliConnection plugin.CliConnection, spaceGuid string, name string) (pluginModels.ServiceInstance, error)
-	GetServiceKey(cliConnection plugin.CliConnection, serviceInstanceGuid string, serviceInstanceUrl string, keyName string) (key pluginModels.ServiceKey, found bool, err error)
-	CreateServiceKey(cliConnection plugin.CliConnection, serviceInstanceGuid string, serviceInstanceUrl string, keyName string) (pluginModels.ServiceKey, error)
-	GetInstanceType(cliConnection plugin.CliConnection, serviceUrl string) (string, error)
+	GetService(cliConnection plugin.CliConnection, spaceGuid string, name string) (pluginModels.MysqlCredentials, error)
 }
 
 func NewApiClient(httpClient HttpWrapper) *apiClient {
@@ -33,125 +29,71 @@ type apiClient struct {
 	logWriter   io.Writer
 }
 
-func (self *apiClient) GetInstanceType(cliConnection plugin.CliConnection, serviceUrl string) (string, error) {
-	instanceTypeResponse, err := self.getFromCfApi(serviceUrl, cliConnection)
-	if err != nil {
-		return "", fmt.Errorf("error retrieving service instance: %s", err)
-	}
-
-	instance, err := deserializeServiceInstanceType(instanceTypeResponse)
-	if err != nil {
-		return "", fmt.Errorf("error deserializing service instance type: %s", err)
-	}
-
-	return instance.Type, nil
-}
-
-func (self *apiClient) GetService(cliConnection plugin.CliConnection, spaceGuid string, name string) (pluginModels.ServiceInstance, error) {
+func (self *apiClient) GetService(cliConnection plugin.CliConnection, spaceGuid string, name string) (pluginModels.MysqlCredentials, error) {
 	path := fmt.Sprintf(
 		"/v2/spaces/%s/service_instances?return_user_provided_service_instances=true&q=name%%3A%s",
 		spaceGuid,
 		url.QueryEscape(name),
 	)
-
-	instanceResponse, err := self.getFromCfApi(path, cliConnection)
+	// Grab service instances by named query.
+	instancesResponse, err := self.getFromCfApi(path, cliConnection)
 	if err != nil {
-		return pluginModels.ServiceInstance{}, fmt.Errorf("error retrieving service instance: %s", err)
+		return pluginModels.MysqlCredentials{}, fmt.Errorf("error retrieving service instance: %s", err)
 	}
 
-	_, instances, err := deserializeInstances(instanceResponse)
-	//return pluginModels.ServiceInstance{}, fmt.Errorf("Service Binding URL returned: %s", instances[0])
-
+	// Deserialize instances.
+	_, instances, err := deserializeInstances(instancesResponse)
 	if err != nil {
-		return pluginModels.ServiceInstance{}, fmt.Errorf("error deserializing service instances: %s", err)
+		return pluginModels.MysqlCredentials{}, fmt.Errorf("error deserializing service instances: %s", err)
 	}
 
+	// Ensure query is not none.
 	if len(instances) == 0 {
-		return pluginModels.ServiceInstance{}, fmt.Errorf("%s not found in current space", name)
+		return pluginModels.MysqlCredentials{}, fmt.Errorf("%s not found in current space", name)
 	}
 
-	return instances[0], nil
-}
-
-func (self *apiClient) GetServiceKey(cliConnection plugin.CliConnection, serviceInstanceGuid string, serviceInstanceUrl string, keyName string) (pluginModels.ServiceKey, bool, error) {
-	path := fmt.Sprintf(
-		"/v2/service_instances/%s/service_keys?q=name%%3A%s",
-		serviceInstanceGuid,
-		url.QueryEscape(keyName),
-	)
-
-	keyResponse, err := self.getFromCfApi(path, cliConnection)
-
+	// Grab service instance from service_url.
+	instanceResponse, err := self.getFromCfApi(instances[0].ServiceUrl, cliConnection)
 	if err != nil {
-		return pluginModels.ServiceKey{}, false, fmt.Errorf("error retrieving service key: %s", err)
+		return pluginModels.MysqlCredentials{}, fmt.Errorf("error retrieving service instance label: %s", err)
 	}
 
-	instancetype, err := self.GetInstanceType(cliConnection, serviceInstanceUrl)
+	// Deserialize instance type.
+	instanceType, err := deserializeServiceInstanceType(instanceResponse)
 	if err != nil {
-		return pluginModels.ServiceKey{}, false, fmt.Errorf("unable to determine service type: %s", err)
+		return pluginModels.MysqlCredentials{}, fmt.Errorf("error deserializing service instance type: %s", err)
 	}
 
-	var serviceKeys []pluginModels.ServiceKey
+	// Grab service bindings from service_bindings_url.
+	bindingsResponse, err := self.getFromCfApi(instances[0].ServiceBindingsUrl, cliConnection)
+	if err != nil {
+		return pluginModels.MysqlCredentials{}, fmt.Errorf("error retrieving service bindings: %s", err)
+	}
 
-	if instancetype == "p.mysql" {
-		serviceKeys, err = deserializePMysqlServiceKeys(keyResponse)
-	} else if instancetype == "aws-rds-mysql" {
-		serviceKeys, err = deserializeAwsRdsMysqlServiceKeys(keyResponse)
-	} else if instancetype == "rdsmysql" {
-		serviceKeys, err = deserializeRdsMysqlServiceKeys(keyResponse)
+	var mysqlCredentials []pluginModels.MysqlCredentials
+
+	if instanceType.Type == "p.mysql" {
+		_, mysqlCredentials, err = deserializePMysqlServiceBindings(bindingsResponse)
+	} else if instanceType.Type == "aws-rds-mysql" {
+		_, mysqlCredentials, err = deserializeAwsRdsMysqlServiceBindings(bindingsResponse)
+	} else if instanceType.Type == "rdsmysql" {
+		_, mysqlCredentials, err = deserializeRdsMysqlServiceBindings(bindingsResponse)
 	} else {
-		return pluginModels.ServiceKey{}, false, fmt.Errorf("unsupported service type: %s", instancetype)
+		return pluginModels.MysqlCredentials{}, fmt.Errorf("unsupported service type: %s", instanceType.Type)
 	}
 
 	if err != nil {
-		return pluginModels.ServiceKey{}, false, fmt.Errorf("error deserializing service key response: %s", err)
+		return pluginModels.MysqlCredentials{}, fmt.Errorf("error retrieving service bindings: %s", err)
 	}
 
-	if len(serviceKeys) == 0 {
-		return pluginModels.ServiceKey{}, false, nil
+	// Ensure apps are bound.
+	if len(mysqlCredentials) == 0 {
+		return pluginModels.MysqlCredentials{}, fmt.Errorf("%s no bound apps", name)
 	}
 
-	return serviceKeys[0], true, nil
-}
+	//return pluginModels.MysqlCredentials{}, fmt.Errorf("TEST: %s", mysqlCredentials[0])
 
-func (self *apiClient) CreateServiceKey(cliConnection plugin.CliConnection, serviceInstanceGuid string, serviceInstanceUrl string, keyName string) (pluginModels.ServiceKey, error) {
-	content := ServiceKeyRequest{
-		Name:                keyName,
-		ServiceInstanceGuid: serviceInstanceGuid,
-	}
-
-	body, err := json.Marshal(content)
-	if err != nil {
-		return pluginModels.ServiceKey{}, fmt.Errorf("error serializing request body: %s", err)
-	}
-
-	response, err := self.postToCfApi("/v2/service_keys", bytes.NewBuffer(body), cliConnection)
-	if err != nil {
-		return pluginModels.ServiceKey{}, fmt.Errorf("error creating service key: %s", err)
-	}
-
-	instancetype, err := self.GetInstanceType(cliConnection, serviceInstanceUrl)
-	if err != nil {
-		return pluginModels.ServiceKey{}, fmt.Errorf("unable to determine service type: %s", err)
-	}
-
-	var serviceKey pluginModels.ServiceKey
-
-	if instancetype == "p.mysql" {
-		serviceKey, err = deserializePMysqlServiceKey(response)
-	} else if instancetype == "aws-rds-mysql" {
-		serviceKey, err = deserializeAwsRdsMysqlServiceKey(response)
-	} else if instancetype == "rdsmysql" {
-		serviceKey, err = deserializeRdsMysqlServiceKey(response)
-	} else {
-		return pluginModels.ServiceKey{}, fmt.Errorf("unsupported service type: %s", instancetype)
-	}
-	fmt.Fprintf(self.logWriter,"Printing service Key:%s\n", serviceKey)
-	if err != nil {
-		return pluginModels.ServiceKey{}, fmt.Errorf("error deserializing service key response: %s", err)
-	}
-
-	return serviceKey, nil
+	return mysqlCredentials[0], nil
 }
 
 func (self *apiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {
@@ -227,94 +169,35 @@ func deserializeInstances(jsonResponse []byte) (string, []pluginModels.ServiceIn
 	return paginatedResources.NextUrl, paginatedResources.ToModel(), nil
 }
 
-func deserializePMysqlServiceKeys(keyResponse []byte) ([]pluginModels.ServiceKey, error) {
-	paginatedResources := new(resources.PaginatedPMysqlServiceKeyResources)
-	err := json.Unmarshal(keyResponse, paginatedResources)
+func deserializeAwsRdsMysqlServiceBindings(jsonResponse []byte) (string, []pluginModels.MysqlCredentials, error) {
+	paginatedResources := new(resources.PaginatedAwsRdsMysqlServiceBindingsResources)
+	err := json.Unmarshal(jsonResponse, paginatedResources)
+
 	if err != nil {
-		return nil, fmt.Errorf("error deserializing service key response: %s", err)
+		return "", nil, fmt.Errorf("unable to deserialize binding credentials: %s", err)
 	}
 
-	serviceKeys, err := paginatedResources.ToModel()
-	if err != nil {
-		return nil, fmt.Errorf("error converting service key response: %s", err)
-	}
-
-	return serviceKeys, nil
+	return paginatedResources.NextUrl, paginatedResources.ToModel(), nil
 }
+func deserializeRdsMysqlServiceBindings(jsonResponse []byte) (string, []pluginModels.MysqlCredentials, error) {
+	paginatedResources := new(resources.PaginatedRdsMysqlServiceBindingsResources)
+	err := json.Unmarshal(jsonResponse, paginatedResources)
 
-func deserializeAwsRdsMysqlServiceKeys(keyResponse []byte) ([]pluginModels.ServiceKey, error) {
-	paginatedResources := new(resources.PaginatedAwsRdsMysqlServiceKeyResources)
-	err := json.Unmarshal(keyResponse, paginatedResources)
 	if err != nil {
-		return nil, fmt.Errorf("error deserializing service key response: %s", err)
+		return "", nil, fmt.Errorf("unable to deserialize binding credentials: %s", err)
 	}
 
-	serviceKeys, err := paginatedResources.ToModel()
-	if err != nil {
-		return nil, fmt.Errorf("error converting service key response: %s", err)
-	}
-
-	return serviceKeys, nil
+	return paginatedResources.NextUrl, paginatedResources.ToModel(), nil
 }
+func deserializePMysqlServiceBindings(jsonResponse []byte) (string, []pluginModels.MysqlCredentials, error) {
+	paginatedResources := new(resources.PaginatedPMysqlServiceBindingsResources)
+	err := json.Unmarshal(jsonResponse, paginatedResources)
 
-func deserializeRdsMysqlServiceKeys(keyResponse []byte) ([]pluginModels.ServiceKey, error) {
-	paginatedResources := new(resources.PaginatedRdsMysqlServiceKeyResources)
-	err := json.Unmarshal(keyResponse, paginatedResources)
 	if err != nil {
-		return nil, fmt.Errorf("error deserializing service key response: %s", err)
+		return "", nil, fmt.Errorf("unable to deserialize binding credentials: %s", err)
 	}
 
-	serviceKeys, err := paginatedResources.ToModel()
-	if err != nil {
-		return nil, fmt.Errorf("error converting service key response: %s", err)
-	}
-
-	return serviceKeys, nil
-}
-
-func deserializePMysqlServiceKey(keyResponse []byte) (pluginModels.ServiceKey, error) {
-	resource := new(resources.PMysqlServiceKeyResource)
-	err := json.Unmarshal(keyResponse, resource)
-	if err != nil {
-		return pluginModels.ServiceKey{}, fmt.Errorf("error deserializing service key response: %s", err)
-	}
-
-	serviceKey, err := resource.ToModel()
-	if err != nil {
-		return pluginModels.ServiceKey{}, fmt.Errorf("error converting service key response: %s", err)
-	}
-
-	return serviceKey, nil
-}
-
-func deserializeAwsRdsMysqlServiceKey(keyResponse []byte) (pluginModels.ServiceKey, error) {
-	resource := new(resources.AwsRdsMysqlServiceKeyResource)
-	err := json.Unmarshal(keyResponse, resource)
-	if err != nil {
-		return pluginModels.ServiceKey{}, fmt.Errorf("error deserializing service key response: %s", err)
-	}
-
-	serviceKey, err := resource.ToModel()
-	if err != nil {
-		return pluginModels.ServiceKey{}, fmt.Errorf("error converting service key response: %s", err)
-	}
-
-	return serviceKey, nil
-}
-
-func deserializeRdsMysqlServiceKey(keyResponse []byte) (pluginModels.ServiceKey, error) {
-	resource := new(resources.RdsMysqlServiceKeyResource)
-	err := json.Unmarshal(keyResponse, resource)
-	if err != nil {
-		return pluginModels.ServiceKey{}, fmt.Errorf("error deserializing service key response: %s", err)
-	}
-
-	serviceKey, err := resource.ToModel()
-	if err != nil {
-		return pluginModels.ServiceKey{}, fmt.Errorf("error converting service key response: %s", err)
-	}
-
-	return serviceKey, nil
+	return paginatedResources.NextUrl, paginatedResources.ToModel(), nil
 }
 
 func deserializeServiceInstanceType(serviceResponse []byte) (pluginModels.ServiceInstanceType, error) {

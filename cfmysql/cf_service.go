@@ -65,38 +65,41 @@ func (self *cfService) GetService(connection plugin.CliConnection, name string) 
 		return MysqlService{}, fmt.Errorf("unable to retrieve current space: %s", err)
 	}
 
-	instance, err := self.apiClient.GetService(connection, space.Guid, name)
-
+	credentials, err := self.apiClient.GetService(connection, space.Guid, name)
 	if err != nil {
 		return MysqlService{}, fmt.Errorf("unable to retrieve metadata for service %s: %s", name, err)
 	}
 
-	serviceKey, found, err := self.apiClient.GetServiceKey(connection, instance.Guid, instance.ServiceUrl, ServiceKeyName)
-	if err != nil {
-		return MysqlService{}, fmt.Errorf("unable to retrieve service key: %s", err)
-	}
+	return toServiceModel(name, credentials), nil
 
-	if found {
-		return toServiceModel(name, serviceKey), nil
-	}
-
-	fmt.Fprintf(self.logWriter, "Creating new service key %s for %s...\n", ServiceKeyName, name)
-	serviceKey, err = self.apiClient.CreateServiceKey(connection, instance.Guid, instance.ServiceUrl, ServiceKeyName)
-	if err != nil {
-		return MysqlService{}, fmt.Errorf("unable to create service key: %s", err)
-	}
-
-	return toServiceModel(name, serviceKey), nil
+	//if err != nil {
+	//	return MysqlService{}, fmt.Errorf("unable to retrieve metadata for service %s: %s", name, err)
+	//}
+	//
+	//serviceKey, found, err := self.apiClient.GetServiceKey(connection, instance.Guid, instance.ServiceUrl, ServiceKeyName)
+	//if err != nil {
+	//	return MysqlService{}, fmt.Errorf("unable to retrieve service key: %s", err)
+	//}
+	//
+	//if found {
+	//	return toServiceModel(name, serviceKey), nil
+	//}
+	//
+	//fmt.Fprintf(self.logWriter, "Creating new service key %s for %s...\n", ServiceKeyName, name)
+	//serviceKey, err = self.apiClient.CreateServiceKey(connection, instance.Guid, instance.ServiceUrl, ServiceKeyName)
+	//if err != nil {
+	//	return MysqlService{}, fmt.Errorf("unable to create service key: %s", err)
+	//}
+	//
 }
 
-func toServiceModel(name string, serviceKey pluginModels.ServiceKey) MysqlService {
+func toServiceModel(name string, serviceKey pluginModels.MysqlCredentials) MysqlService {
 	return MysqlService{
 		Name:     name,
 		Hostname: serviceKey.Hostname,
 		Port:     serviceKey.Port,
-		DbName:   serviceKey.DbName,
+		DbName:   serviceKey.Database,
 		Username: serviceKey.Username,
 		Password: serviceKey.Password,
-		CaCert:   serviceKey.CaCert,
 	}
 }

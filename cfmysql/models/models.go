@@ -22,3 +22,16 @@ type ServiceKey struct {
 	Password            string
 	CaCert              string
 }
+
+type ServiceBindings struct {
+	AppUrl string
+}
+
+type MysqlCredentials struct {
+	Uri		 string
+	Hostname string
+	Port 	 string
+	Database string
+	Username string
+	Password string
+}
