@@ -2,15 +2,14 @@ package cfmysql_test
 
 import (
 	. "github.com/elliott-neal/cf-mysql-plugin/cfmysql"
+	"github.com/elliott-neal/cf-mysql-plugin/cfmysql/models"
 
 	"errors"
 	"fmt"
 
-	"bytes"
 	"code.cloudfoundry.org/cli/plugin/models"
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"
 	"github.com/elliott-neal/cf-mysql-plugin/cfmysql/cfmysqlfakes"
-	"github.com/elliott-neal/cf-mysql-plugin/cfmysql/models"
 	"github.com/elliott-neal/cf-mysql-plugin/cfmysql/test_resources"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -27,6 +26,8 @@ var _ = Describe("ApiClient", func() {
 		mockHttp = new(cfmysqlfakes.FakeHttpWrapper)
 		mockHttp.GetStub = func(url string, accessToken string, skipSsl bool) ([]byte, error) {
 			switch url {
+			case "https://cf.api.url/v2/service_instances/service-instance-guid-a/service_bindings":
+				return test_resources.LoadResource("test_resources/service_bindings.json"), nil
 			case "https://cf.api.url/v2/service_instances/service-instance-guid/service_keys?q=name%3Aservice-key-name":
 				return test_resources.LoadResource("test_resources/service_key.json"), nil
 			case "https://cf.api.url/v2/service_instances/service-instance-guid/service_keys?q=name%3Ano-such-key":
@@ -102,10 +103,13 @@ var _ = Describe("ApiClient", func() {
 				instance, err := apiClient.GetService(cliConnection, "space-guid", "service-name-a")
 
 				Expect(err).To(BeNil())
-				Expect(instance).To(Equal(models.ServiceInstance{
-					Name:      "service-name-a",
-					Guid:      "service-instance-guid-a",
-					SpaceGuid: "space-guid",
+				Expect(instance).To(Equal(models.MysqlCredentials{
+					Uri: "uri",
+					Hostname: "hostname",
+					Port: "3306",
+					Database: "db-name",
+					Username: "username",
+					Password: "password",
 				}))
 			})
 		})
@@ -115,64 +119,91 @@ var _ = Describe("ApiClient", func() {
 				instance, err := apiClient.GetService(cliConnection, "space-guid", "no-such-service")
 
 				Expect(err).To(Equal(errors.New("no-such-service not found in current space")))
-				Expect(instance).To(Equal(models.ServiceInstance{}))
+				Expect(instance).To(Equal(models.MysqlCredentials{}))
 			})
 		})
 	})
 
-	Describe("GetServiceKey", func() {
-		Context("When the API returns a key", func() {
-			It("Returns the key", func() {
-				serviceKey, found, err := apiClient.GetServiceKey(cliConnection, "service-instance-guid", "/v2/services/service-instance-guid", "service-key-name")
+	Describe("GetService", func() {
+		Context("When the API returns a matching service", func() {
+			It("Returns service info", func() {
+				instance, err := apiClient.GetService(cliConnection, "space-guid", "service-name-a")
 
-				Expect(found).To(BeTrue())
 				Expect(err).To(BeNil())
-				Expect(serviceKey).To(Equal(models.ServiceKey{
-					ServiceInstanceGuid: "service-instance-guid",
-					Uri:                 "uri",
-					DbName:              "db-name",
-					Hostname:            "hostname",
-					Port:                "3306",
-					Username:            "username",
-					Password:            "password",
-					CaCert:              "ca-certificate",
+				Expect(instance).To(Equal(models.MysqlCredentials{
+					Uri: "uri",
+					Hostname: "hostname",
+					Port: "3306",
+					Database: "db-name",
+					Username: "username",
+					Password: "password",
 				}))
 			})
 		})
 
-		Context("When no key was found for the given service guid and key name", func() {
-			It("Returns not found", func() {
-				serviceKey, found, err := apiClient.GetServiceKey(cliConnection, "service-instance-guid", "/v2/services/service-instance-guid", "no-such-key")
+		Context("When no matching service instance is returned", func() {
+			It("Returns an error", func() {
+				instance, err := apiClient.GetService(cliConnection, "space-guid", "no-such-service")
 
-				Expect(found).To(BeFalse())
-				Expect(err).To(BeNil())
-				Expect(serviceKey).To(Equal(models.ServiceKey{}))
+				Expect(err).To(Equal(errors.New("no-such-service not found in current space")))
+				Expect(instance).To(Equal(models.MysqlCredentials{}))
 			})
 		})
 	})
 
-	Describe("CreateServiceKey", func() {
-		Context("When the API returns a key", func() {
-			It("Returns the key", func() {
-				serviceKey, err := apiClient.CreateServiceKey(cliConnection, "service-instance-guid", "/v2/services/service-instance-guid", "service-key-name")
+	//Describe("GetServiceKey", func() {
+	//	Context("When the API returns a key", func() {
+	//		It("Returns the key", func() {
+	//			serviceKey, found, err := apiClient.GetServiceKey(cliConnection, "service-instance-guid", "/v2/services/service-instance-guid", "service-key-name")
+	//
+	//			Expect(found).To(BeTrue())
+	//			Expect(err).To(BeNil())
+	//			Expect(serviceKey).To(Equal(models.ServiceKey{
+	//				ServiceInstanceGuid: "service-instance-guid",
+	//				Uri:                 "uri",
+	//				DbName:              "db-name",
+	//				Hostname:            "hostname",
+	//				Port:                "3306",
+	//				Username:            "username",
+	//				Password:            "password",
+	//				CaCert:              "ca-certificate",
+	//			}))
+	//		})
+	//	})
+	//
+	//	Context("When no key was found for the given service guid and key name", func() {
+	//		It("Returns not found", func() {
+	//			serviceKey, found, err := apiClient.GetServiceKey(cliConnection, "service-instance-guid", "/v2/services/service-instance-guid", "no-such-key")
+	//
+	//			Expect(found).To(BeFalse())
+	//			Expect(err).To(BeNil())
+	//			Expect(serviceKey).To(Equal(models.ServiceKey{}))
+	//		})
+	//	})
+	//})
 
-				url, body, accessToken, sslDisabled := mockHttp.PostArgsForCall(0)
-				Expect(url).To(Equal("https://cf.api.url/v2/service_keys"))
-				Expect(body).To(Equal(bytes.NewBuffer([]byte("{\"name\":\"service-key-name\",\"service_instance_guid\":\"service-instance-guid\"}"))))
-				Expect(accessToken).To(Equal("bearer my-secret-token"))
-				Expect(sslDisabled).To(BeTrue())
-
-				Expect(err).To(BeNil())
-				Expect(serviceKey).To(Equal(models.ServiceKey{
-					ServiceInstanceGuid: "service-instance-guid",
-					Uri:                 "uri",
-					DbName:              "db-name",
-					Hostname:            "hostname",
-					Port:                "3306",
-					Username:            "username",
-					Password:            "password",
-				}))
-			})
-		})
-	})
+	//Describe("CreateServiceKey", func() {
+	//	Context("When the API returns a key", func() {
+	//		It("Returns the key", func() {
+	//			serviceKey, err := apiClient.CreateServiceKey(cliConnection, "service-instance-guid", "/v2/services/service-instance-guid", "service-key-name")
+	//
+	//			url, body, accessToken, sslDisabled := mockHttp.PostArgsForCall(0)
+	//			Expect(url).To(Equal("https://cf.api.url/v2/service_keys"))
+	//			Expect(body).To(Equal(bytes.NewBuffer([]byte("{\"name\":\"service-key-name\",\"service_instance_guid\":\"service-instance-guid\"}"))))
+	//			Expect(accessToken).To(Equal("bearer my-secret-token"))
+	//			Expect(sslDisabled).To(BeTrue())
+	//
+	//			Expect(err).To(BeNil())
+	//			Expect(serviceKey).To(Equal(models.ServiceKey{
+	//				ServiceInstanceGuid: "service-instance-guid",
+	//				Uri:                 "uri",
+	//				DbName:              "db-name",
+	//				Hostname:            "hostname",
+	//				Port:                "3306",
+	//				Username:            "username",
+	//				Password:            "password",
+	//			}))
+	//		})
+	//	})
+	//})
 })

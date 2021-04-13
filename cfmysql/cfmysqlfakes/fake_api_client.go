@@ -24,7 +24,7 @@ type FakeApiClient struct {
 		result1 []sdkModels.GetAppsModel
 		result2 error
 	}
-	GetServiceStub        func(cliConnection plugin.CliConnection, spaceGuid string, name string) (pluginModels.ServiceInstance, error)
+	GetServiceStub        func(cliConnection plugin.CliConnection, spaceGuid string, name string) (pluginModels.MysqlCredentials, error)
 	getServiceMutex       sync.RWMutex
 	getServiceArgsForCall []struct {
 		cliConnection plugin.CliConnection
@@ -32,11 +32,11 @@ type FakeApiClient struct {
 		name          string
 	}
 	getServiceReturns struct {
-		result1 pluginModels.ServiceInstance
+		result1 pluginModels.MysqlCredentials
 		result2 error
 	}
 	getServiceReturnsOnCall map[int]struct {
-		result1 pluginModels.ServiceInstance
+		result1 pluginModels.MysqlCredentials
 		result2 error
 	}
 	GetServiceKeyStub        func(cliConnection plugin.CliConnection, serviceInstanceGuid string, keyName string) (key pluginModels.ServiceKey, found bool, err error)
@@ -126,7 +126,7 @@ func (fake *FakeApiClient) GetStartedAppsReturnsOnCall(i int, result1 []sdkModel
 	}{result1, result2}
 }
 
-func (fake *FakeApiClient) GetService(cliConnection plugin.CliConnection, spaceGuid string, name string) (pluginModels.ServiceInstance, error) {
+func (fake *FakeApiClient) GetService(cliConnection plugin.CliConnection, spaceGuid string, name string) (pluginModels.MysqlCredentials, error) {
 	fake.getServiceMutex.Lock()
 	ret, specificReturn := fake.getServiceReturnsOnCall[len(fake.getServiceArgsForCall)]
 	fake.getServiceArgsForCall = append(fake.getServiceArgsForCall, struct {
@@ -157,24 +157,24 @@ func (fake *FakeApiClient) GetServiceArgsForCall(i int) (plugin.CliConnection, s
 	return fake.getServiceArgsForCall[i].cliConnection, fake.getServiceArgsForCall[i].spaceGuid, fake.getServiceArgsForCall[i].name
 }
 
-func (fake *FakeApiClient) GetServiceReturns(result1 pluginModels.ServiceInstance, result2 error) {
+func (fake *FakeApiClient) GetServiceReturns(result1 pluginModels.MysqlCredentials, result2 error) {
 	fake.GetServiceStub = nil
 	fake.getServiceReturns = struct {
-		result1 pluginModels.ServiceInstance
+		result1 pluginModels.MysqlCredentials
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeApiClient) GetServiceReturnsOnCall(i int, result1 pluginModels.ServiceInstance, result2 error) {
+func (fake *FakeApiClient) GetServiceReturnsOnCall(i int, result1 pluginModels.MysqlCredentials, result2 error) {
 	fake.GetServiceStub = nil
 	if fake.getServiceReturnsOnCall == nil {
 		fake.getServiceReturnsOnCall = make(map[int]struct {
-			result1 pluginModels.ServiceInstance
+			result1 pluginModels.MysqlCredentials
 			result2 error
 		})
 	}
 	fake.getServiceReturnsOnCall[i] = struct {
-		result1 pluginModels.ServiceInstance
+		result1 pluginModels.MysqlCredentials
 		result2 error
 	}{result1, result2}
 }

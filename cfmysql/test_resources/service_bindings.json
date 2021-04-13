@@ -1,0 +1,84 @@
+{
+  "total_results": 1,
+  "total_pages": 1,
+  "prev_url": null,
+  "next_url": "next-url",
+  "resources": [
+      {
+      "metadata": {
+        "guid": "service-key-guid",
+        "url": "/v2/service_keys/service-key-guid",
+        "created_at": "2021-04-09T15:22:28Z",
+        "updated_at": "2021-04-09T15:22:28Z"
+      },
+      "entity": {
+        "app_guid": "app-guid",
+        "service_instance_guid": "service-instance-guid",
+        "credentials": {
+          "name": "db-name",
+          "engine": "mysql",
+          "engine_version": "8.0.16",
+          "hostname": "hostname",
+          "password": "password",
+          "port": 3306,
+          "uri": "uri",
+          "username": "username"
+        },
+        "binding_options": {},
+        "gateway_data": null,
+        "gateway_name": "",
+        "syslog_drain_url": null,
+        "volume_mounts": [],
+        "name": null,
+        "last_operation": {
+          "type": "create",
+          "state": "succeeded",
+          "description": "",
+          "updated_at": "2021-04-09T15:22:28Z",
+          "created_at": "2021-04-09T15:22:28Z"
+        },
+        "app_url": "/v2/apps/app-guid",
+        "service_instance_url": "/v2/service_instances/service-instance-guid",
+        "service_binding_parameters_url": "/v2/service_bindings/service-binding-id/parameters"
+      }
+    },
+    {
+      "metadata": {
+        "guid": "service-key-guid-2",
+        "url": "/v2/service_keys/service-key-guid-2",
+        "created_at": "2021-04-09T15:22:28Z",
+        "updated_at": "2021-04-09T15:22:28Z"
+      },
+      "entity": {
+        "app_guid": "app-guid-2",
+        "service_instance_guid": "service-instance-guid-2",
+        "credentials": {
+          "name": "db-name",
+          "engine": "mysql",
+          "engine_version": "8.0.16",
+          "hostname": "hostname",
+          "password": "password",
+          "port": 2342,
+          "uri": "uri",
+          "username": "username"
+        },
+        "binding_options": {},
+        "gateway_data": null,
+        "gateway_name": "",
+        "syslog_drain_url": null,
+        "volume_mounts": [],
+        "name": null,
+        "last_operation": {
+          "type": "create",
+          "state": "succeeded",
+          "description": "",
+          "updated_at": "2021-04-09T15:22:28Z",
+          "created_at": "2021-04-09T15:22:28Z"
+        },
+        "app_url": "/v2/apps/app-guid-2",
+        "service_instance_url": "/v2/service_instances/service-instance-guid-2",
+        "service_binding_parameters_url": "/v2/service_bindings/service-binding-id-2/parameters"
+      }
+    }
+  ]
+}

@@ -30,6 +30,7 @@
         "space_url": "/v2/spaces/space-guid",
         "service_plan_url": "/v2/service_plans/service-plan-guid",
         "service_bindings_url": "/v2/service_instances/service-instance-guid-a/service_bindings",
+        "service_url": "/v2/services/service-instance-guid",
         "service_keys_url": "/v2/service_instances/service-instance-guid-a/service_keys",
         "routes_url": "/v2/service_instances/service-instance-guid-a/routes"
       }

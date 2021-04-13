@@ -33,7 +33,7 @@ func (self *MysqlPlugin) GetMetadata() plugin.PluginMetadata {
 		Name: "mysql",
 		Version: plugin.VersionType{
 			Major: 3,
-			Minor: 0,
+			Minor: 1,
 			Build: 1,
 		},
 		MinCliVersion: plugin.VersionType{
